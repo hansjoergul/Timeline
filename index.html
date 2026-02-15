@@ -6,26 +6,16 @@
     <title>Unsere Timeline</title>
     <style>
         :root { --accent: #ff8a80; --bg: #fdfcfb; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: #333; margin: 0; display: flex; justify-content: center; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; padding: 20px; }
-        
-        /* Login Layer */
         #login-screen { text-align: center; margin-top: 100px; }
-        input[type="password"], input[type="text"] { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        
-        /* Timeline Cards */
-        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; overflow: hidden; animation: fadeIn 0.5s ease; }
-        .card img { width: 100%; height: auto; display: block; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; overflow: hidden; }
+        .card img { width: 100%; display: block; }
         .card-content { padding: 15px; }
-        .card-date { font-size: 0.8rem; color: #888; margin-bottom: 5px; }
-        .card-text { font-size: 1.1rem; font-weight: 500; }
-
-        /* Upload Area */
         .upload-section { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 40px; border: 2px dashed var(--accent); }
-        button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-        
+        button { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
         .hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -38,26 +28,20 @@
     </div>
 
     <div id="main-app" class="hidden">
-        <header>
-            <h1>Unsere Momente ❤️</h1>
-        </header>
-
+        <h1>Unsere Momente ❤️</h1>
         <div class="upload-section">
             <input type="file" id="file-btn" accept="image/*">
             <input type="text" id="desc-field" placeholder="Was ist passiert?">
             <button id="upload-btn">Moment speichern</button>
             <p id="status" style="font-size: 0.8rem; color: var(--accent);"></p>
         </div>
-
-        <div id="timeline-list">
-            </div>
+        <div id="timeline-list"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
@@ -70,57 +54,61 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
-    // PIN Check
     window.checkAccess = function() {
-        const pin = document.getElementById('pin-field').value;
-        if(pin === "1234") { // <--- HIER DEINEN PIN ÄNDERN
+        if(document.getElementById('pin-field').value === "1234") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
             startTimelineListener();
-        } else {
-            alert("Falscher PIN!");
-        }
+        } else { alert("Falscher PIN!"); }
     };
 
-    // Upload Logik
-    const uploadBtn = document.getElementById('upload-btn');
-    uploadBtn.onclick = async () => {
+    // Hilfsfunktion: Bild verkleinern (damit es in die Datenbank passt)
+    const resizeImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; // Breite auf 600px begrenzen
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% Qualität
+                };
+            };
+        });
+    };
+
+    document.getElementById('upload-btn').onclick = async () => {
         const file = document.getElementById('file-btn').files[0];
         const desc = document.getElementById('desc-field').value;
         const status = document.getElementById('status');
 
         if(!file || !desc) return alert("Bild und Text fehlen!");
 
-        status.innerText = "Wird hochgeladen...";
-        uploadBtn.disabled = true;
+        status.innerText = "Moment wird verarbeitet...";
+        const base64Image = await resizeImage(file);
 
         try {
-            // 1. Bild hochladen
-            const storageRef = ref(storage, 'momente/' + Date.now() + "_" + file.name);
-            const snapshot = await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(snapshot.ref);
-
-            // 2. Eintrag in Datenbank speichern
             await addDoc(collection(db, "momente"), {
-                bildUrl: url,
+                bildData: base64Image, // Das Bild als Text-Code
                 text: desc,
-                datum: new Date(),
                 erstelltAm: Date.now()
             });
-
-            status.innerText = "Erfolgreich gespeichert!";
+            status.innerText = "Gespeichert!";
             document.getElementById('desc-field').value = "";
             document.getElementById('file-btn').value = "";
         } catch (e) {
-            console.error(e);
-            alert("Fehler beim Upload!");
+            alert("Fehler: Datenbank-Regeln prüfen!");
         }
-        uploadBtn.disabled = false;
     };
 
-    // Timeline anzeigen
     function startTimelineListener() {
         const q = query(collection(db, "momente"), orderBy("erstelltAm", "desc"));
         onSnapshot(q, (snapshot) => {
@@ -128,16 +116,13 @@
             list.innerHTML = "";
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                const datumStr = data.datum.toDate().toLocaleDateString('de-DE');
                 list.innerHTML += `
                     <div class="card">
-                        <img src="${data.bildUrl}" loading="lazy">
+                        <img src="${data.bildData}">
                         <div class="card-content">
-                            <div class="card-date">${datumStr}</div>
                             <div class="card-text">${data.text}</div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         });
     }

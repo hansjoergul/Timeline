@@ -2,13 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Unsere Familien-Timeline</title>
     <style>
         :root { 
-            --accent: #ff8a80; 
-            --bg: #fdfcfb; 
-            --text: #444;
+            --accent: #ff6b6b; 
+            --bg: #f4f7f6; 
+            --text: #333;
+            --card-size: 250px; /* Standardgröße für den Zoom */
         }
         
         body { 
@@ -16,113 +17,234 @@
             background: var(--bg); 
             color: var(--text);
             margin: 0; 
+            height: 100vh; /* Füllt den ganzen Handy-Bildschirm */
             display: flex; 
-            justify-content: center; 
+            flex-direction: column;
+            overflow: hidden; /* Verhindert das Scrollen der ganzen Seite */
         }
 
-        .app-container { 
-            width: 100%; 
-            max-width: 500px; 
-            padding: 20px; 
-        }
-
-        /* Login Screen */
+        /* --- LOGIN SCREEN --- */
         #login-screen { 
             text-align: center; 
-            margin-top: 100px; 
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
         }
 
-        input { 
-            width: 100%; 
-            padding: 14px; 
-            margin: 10px 0; 
-            border: 1px solid #ddd; 
-            border-radius: 12px; 
-            box-sizing: border-box;
-            font-size: 16px;
+        #login-screen input {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px;
+            margin: 20px auto;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-size: 18px;
+            text-align: center;
         }
 
-        /* Timeline Cards */
+        #login-screen button {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* --- APP LAYOUT --- */
+        #main-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* HEADER (Titel & Zoom) */
+        header {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h2 { margin: 0; font-size: 1.2rem; color: var(--accent); }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .zoom-controls input[type=range] { width: 100px; }
+
+        /* TIMELINE (Horizontal scrollbar) */
+        #timeline-container {
+            flex-grow: 1;
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch; /* Flüssiges Wischen auf Apple-Geräten */
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+        }
+
+        /* Versteckt den hässlichen Scrollbalken, wischen funktioniert trotzdem */
+        #timeline-container::-webkit-scrollbar { display: none; } 
+
+        /* Die durchgehende Timeline-Linie */
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: max-content;
+            min-width: 100%;
+            height: 4px;
+            background: var(--accent);
+            opacity: 0.3;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+
+        #timeline-list {
+            display: flex;
+            gap: 30px; /* Abstand zwischen den Bildern */
+            z-index: 1;
+        }
+
+        /* KARTEN (Die Fotos) */
         .card { 
             background: white; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
-            margin-bottom: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            width: var(--card-size); /* Wird vom Zoom-Regler gesteuert */
+            flex-shrink: 0; /* Verhindert, dass die Karten gequetscht werden */
             overflow: hidden; 
-            animation: fadeIn 0.5s ease;
+            border: 3px solid white;
+            transition: width 0.2s ease-out; /* Weicher Übergang beim Zoomen */
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .card img { 
             width: 100%; 
-            height: auto;
+            height: var(--card-size); /* Macht die Bilder quadratisch */
+            object-fit: cover; /* Schneidet das Bild hübsch ab, ohne es zu verzerren */
             display: block; 
+            background: #eee;
         }
 
-        .card-content { padding: 20px; }
-        .card-text { font-size: 1.1rem; line-height: 1.4; }
+        .card-content { 
+            padding: 12px; 
+            background: white;
+        }
+        
+        .card-text { 
+            font-size: 0.85rem; /* Schrift verkleinert! */
+            color: #555;
+            line-height: 1.3;
+            margin-bottom: 5px;
+        }
 
-        /* Upload Bereich */
-        .upload-section { 
-            background: #fff; 
-            padding: 20px; 
-            border-radius: 20px; 
-            margin-bottom: 40px; 
-            border: 2px dashed var(--accent); 
+        .card-date {
+            font-size: 0.65rem;
+            color: #aaa;
+        }
+
+        /* UPLOAD BEREICH (Unten fixiert) */
+        footer {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .upload-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Versteckt den Standard-Datei-Knopf, macht ihn schöner */
+        input[type="file"] { display: none; }
+        .file-label {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 50px;
+            flex-shrink: 0;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #f9f9f9;
+            margin: 0;
         }
 
         button { 
             background: var(--accent); 
             color: white; 
             border: none; 
-            padding: 15px; 
-            border-radius: 12px; 
+            padding: 12px; 
+            border-radius: 10px; 
             cursor: pointer; 
             width: 100%; 
             font-weight: bold; 
             font-size: 16px;
-            transition: transform 0.2s;
         }
 
-        button:active { transform: scale(0.98); }
-
-        .hidden { display: none; }
-        #status { font-size: 0.9rem; color: #888; margin-top: 10px; text-align: center; }
+        .hidden { display: none !important; }
+        #status { font-size: 0.8rem; color: var(--accent); text-align: center; margin-top: 5px; margin-bottom: 0; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div id="login-screen">
-        <h1 style="font-size: 3rem;">📸</h1>
-        <h2>Familien-Login</h2>
-        <input type="password" id="pin-field" placeholder="PIN eingeben (1234)">
-        <button onclick="checkAccess()">Einloggen</button>
-    </div>
+<div id="login-screen">
+    <h1 style="font-size: 4rem; margin: 0 0 10px 0;">📸</h1>
+    <h2 style="color: var(--text);">Timeline Login</h2>
+    <input type="password" id="pin-field" placeholder="PIN eingeben (1234)">
+    <button onclick="checkAccess()">Öffnen</button>
+</div>
 
-    <div id="main-app" class="hidden">
-        <h2 style="color: var(--accent);">Unsere Momente ❤️</h2>
-        
-        <div class="upload-section">
-            <label style="font-size: 0.8rem; font-weight: bold; color: #888;">BILD WÄHLEN</label>
-            <input type="file" id="file-btn" accept="image/*">
-            <input type="text" id="desc-field" placeholder="Was gibt's Neues?">
-            <button id="upload-btn">In die Timeline posten</button>
-            <p id="status"></p>
+<div id="main-app" class="hidden">
+    
+    <header>
+        <h2>Unsere Momente</h2>
+        <div class="zoom-controls">
+            <span>🔍</span>
+            <input type="range" id="zoom-slider" min="150" max="400" value="250">
         </div>
+    </header>
 
+    <div id="timeline-container">
+        <div class="timeline-line"></div>
         <div id="timeline-list">
             </div>
     </div>
+
+    <footer>
+        <div class="upload-row">
+            <label class="file-label" for="file-btn">📷</label>
+            <input type="file" id="file-btn" accept="image/*">
+            <input type="text" id="desc-field" placeholder="Was gibt's Neues?">
+        </div>
+        <button id="upload-btn">Posten</button>
+        <p id="status"></p>
+    </footer>
+
 </div>
 
 <script type="module">
-    // Firebase Module laden
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // DEINE KONFIGURATION
     const firebaseConfig = {
         apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
         authDomain: "hansjoergultimeline.firebaseapp.com",
@@ -135,19 +257,22 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // LOGIN FUNKTION
+    // LOGIN
     window.checkAccess = function() {
-        const pin = document.getElementById('pin-field').value;
-        if(pin === "1234") {
+        if(document.getElementById('pin-field').value === "1234") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
             startTimelineListener();
-        } else {
-            alert("Falscher PIN! Versuche es nochmal.");
-        }
+        } else { alert("Falscher PIN!"); }
     };
 
-    // BILD-OPIMIERUNG (Die Größen-Bremse)
+    // ZOOM FUNKTION
+    document.getElementById('zoom-slider').addEventListener('input', function(e) {
+        // Ändert die CSS Variable stufenlos
+        document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
+    });
+
+    // BILD VERKLEINERN
     const resizeImage = (file) => {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -159,84 +284,84 @@
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    const max_size = 800; // Maximale Breite oder Höhe
+                    const max_size = 800; 
 
                     if (width > height) {
-                        if (width > max_size) {
-                            height *= max_size / width;
-                            width = max_size;
-                        }
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
                     } else {
-                        if (height > max_size) {
-                            width *= max_size / height;
-                            height = max_size;
-                        }
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
                     }
 
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Umwandlung in kompaktes JPG (60% Qualität ist ideal für Handys)
                     resolve(canvas.toDataURL('image/jpeg', 0.6));
                 };
             };
         });
     };
 
-    // UPLOAD FUNKTION
+    // UPLOAD
     document.getElementById('upload-btn').onclick = async () => {
         const fileBtn = document.getElementById('file-btn');
         const descField = document.getElementById('desc-field');
         const status = document.getElementById('status');
 
-        if(!fileBtn.files[0] || !descField.value) {
-            return alert("Bitte ein Foto auswählen und einen kurzen Text schreiben!");
-        }
+        if(!fileBtn.files[0]) return alert("Bitte tippe auf 📷 um ein Foto auszuwählen!");
+        if(!descField.value) return alert("Bitte schreibe einen kurzen Text dazu!");
 
-        status.innerText = "Bild wird für die Timeline optimiert...";
+        status.innerText = "Moment wird gespeichert...";
+        document.getElementById('upload-btn').disabled = true;
         
         try {
-            // 1. Bild schrumpfen
             const base64Image = await resizeImage(fileBtn.files[0]);
-
-            // 2. In Firestore speichern (ohne Storage!)
             await addDoc(collection(db, "momente"), {
                 bildData: base64Image,
                 text: descField.value,
                 erstelltAm: Date.now()
             });
 
-            status.innerText = "✅ Erfolgreich gepostet!";
+            status.innerText = "✅ Gepostet!";
             descField.value = "";
             fileBtn.value = "";
-            
-            // Status nach 3 Sek ausblenden
             setTimeout(() => { status.innerText = ""; }, 3000);
 
         } catch (e) {
-            console.error(e);
-            status.innerText = "❌ Fehler: Datenbank voll oder Regeln falsch.";
+            status.innerText = "❌ Fehler beim Speichern.";
         }
+        document.getElementById('upload-btn').disabled = false;
     };
 
-    // LIVE-TIMELINE LADEN
+    // TIMELINE LADEN & ANZEIGEN
     function startTimelineListener() {
-        const q = query(collection(db, "momente"), orderBy("erstelltAm", "desc"));
+        const q = query(collection(db, "momente"), orderBy("erstelltAm", "asc")); // "asc" für links nach rechts
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('timeline-list');
             list.innerHTML = "";
+            
             snapshot.forEach((doc) => {
                 const data = doc.data();
+                
+                // Datum schön formatieren
+                const dateObj = new Date(data.erstelltAm);
+                const dateStr = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
                 list.innerHTML += `
                     <div class="card">
                         <img src="${data.bildData}">
                         <div class="card-content">
                             <div class="card-text">${data.text}</div>
+                            <div class="card-date">${dateStr}</div>
                         </div>
                     </div>`;
             });
+
+            // Automatisch ans Ende (ganz nach rechts) scrollen bei neuen Bildern
+            setTimeout(() => {
+                const container = document.getElementById('timeline-container');
+                container.scrollLeft = container.scrollWidth;
+            }, 100);
         });
     }
 </script>

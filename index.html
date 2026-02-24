@@ -9,197 +9,121 @@
             --accent: #ff6b6b; 
             --bg: #f4f7f6; 
             --text: #333;
-            --card-size: 250px; /* Standardgröße für den Zoom */
+            --card-size: 250px; /* Start-Zoom */
         }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); 
-            color: var(--text);
-            margin: 0; 
-            height: 100vh; /* Füllt den ganzen Handy-Bildschirm */
-            display: flex; 
-            flex-direction: column;
-            overflow: hidden; /* Verhindert das Scrollen der ganzen Seite */
+            background: var(--bg); color: var(--text);
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- LOGIN SCREEN --- */
-        #login-screen { 
-            text-align: center; 
-            padding: 40px 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-        }
+        /* LOGIN */
+        #login-screen { text-align: center; padding: 40px 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; }
+        #login-screen input { width: 100%; max-width: 300px; padding: 15px; margin: 20px auto; border: 2px solid #ddd; border-radius: 12px; font-size: 18px; text-align: center; }
+        #login-screen button { max-width: 300px; margin: 0 auto; }
 
-        #login-screen input {
-            width: 100%;
-            max-width: 300px;
-            padding: 15px;
-            margin: 20px auto;
-            border: 2px solid #ddd;
-            border-radius: 12px;
-            font-size: 18px;
-            text-align: center;
-        }
-
-        #login-screen button {
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        /* --- APP LAYOUT --- */
-        #main-app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100%;
-        }
-
-        /* HEADER (Titel & Zoom) */
-        header {
-            background: white;
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
+        /* APP LAYOUT */
+        #main-app { display: flex; flex-direction: column; height: 100vh; width: 100%; }
+        header { background: white; padding: 15px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; display: flex; justify-content: space-between; align-items: center; }
         header h2 { margin: 0; font-size: 1.2rem; color: var(--accent); }
+        .zoom-hint { font-size: 0.8rem; color: #888; background: #eee; padding: 5px 10px; border-radius: 15px; }
 
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .zoom-controls input[type=range] { width: 100px; }
-
-        /* TIMELINE (Horizontal scrollbar) */
+        /* TIMELINE CONTAINER (Scrollbar & Touch) */
         #timeline-container {
             flex-grow: 1;
             position: relative;
             overflow-x: auto;
             overflow-y: hidden;
-            -webkit-overflow-scrolling: touch; /* Flüssiges Wischen auf Apple-Geräten */
+            -webkit-overflow-scrolling: touch;
             display: flex;
             align-items: center;
-            padding: 0 40px;
+            padding: 0 50vw; /* Platz links und rechts, damit man jedes Element in die Mitte wischen kann */
+            touch-action: pan-x; /* Erlaubt wischen, blockiert aber natives Browser-Zoomen für unseren Custom-Zoom */
         }
+        #timeline-container::-webkit-scrollbar { display: none; }
 
-        /* Versteckt den hässlichen Scrollbalken, wischen funktioniert trotzdem */
-        #timeline-container::-webkit-scrollbar { display: none; } 
-
-        /* Die durchgehende Timeline-Linie */
+        /* DIE ACHSE (Die horizontale Linie) */
         .timeline-line {
             position: absolute;
-            top: 50%;
+            top: 35%; /* Position der Zeit-Linie */
             left: 0;
             width: max-content;
             min-width: 100%;
-            height: 4px;
-            background: var(--accent);
-            opacity: 0.3;
+            height: 3px;
+            background: #ccc;
             z-index: 0;
-            transform: translateY(-50%);
         }
 
-        #timeline-list {
+        #timeline-list { display: flex; gap: 20px; z-index: 1; height: 80%; align-items: flex-start; margin-top: 10vh; }
+
+        /* TIMELINE ELEMENT (Achse + Karte) */
+        .timeline-item {
             display: flex;
-            gap: 30px; /* Abstand zwischen den Bildern */
-            z-index: 1;
-        }
-
-        /* KARTEN (Die Fotos) */
-        .card { 
-            background: white; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-            width: var(--card-size); /* Wird vom Zoom-Regler gesteuert */
-            flex-shrink: 0; /* Verhindert, dass die Karten gequetscht werden */
-            overflow: hidden; 
-            border: 3px solid white;
-            transition: width 0.2s ease-out; /* Weicher Übergang beim Zoomen */
-        }
-
-        .card img { 
-            width: 100%; 
-            height: var(--card-size); /* Macht die Bilder quadratisch */
-            object-fit: cover; /* Schneidet das Bild hübsch ab, ohne es zu verzerren */
-            display: block; 
-            background: #eee;
-        }
-
-        .card-content { 
-            padding: 12px; 
-            background: white;
-        }
-        
-        .card-text { 
-            font-size: 0.85rem; /* Schrift verkleinert! */
-            color: #555;
-            line-height: 1.3;
-            margin-bottom: 5px;
-        }
-
-        .card-date {
-            font-size: 0.65rem;
-            color: #aaa;
-        }
-
-        /* UPLOAD BEREICH (Unten fixiert) */
-        footer {
-            background: white;
-            padding: 15px 20px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
-
-        .upload-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        /* Versteckt den Standard-Datei-Knopf, macht ihn schöner */
-        input[type="file"] { display: none; }
-        .file-label {
-            background: #f0f0f0;
-            padding: 12px;
-            border-radius: 10px;
-            display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            width: 50px;
-            flex-shrink: 0;
+            width: var(--card-size);
+            transition: width 0.1s ease-out;
+            position: relative;
         }
 
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background: #f9f9f9;
-            margin: 0;
+        /* DATUM AN DER ACHSE */
+        .axis-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .axis-dot {
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border: 3px solid white;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .date-label { font-weight: bold; color: #555; text-align: center; white-space: nowrap; }
+
+        /* DIE FOTOKARTEN */
+        .card { 
+            background: white; border-radius: 16px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            width: 100%; position: relative; border: 3px solid white; overflow: hidden;
+        }
+        .card img { width: 100%; height: var(--card-size); object-fit: cover; display: block; background: #eee; transition: height 0.1s; }
+        .card-content { padding: 12px; background: white; }
+        .card-text { font-size: 0.9rem; color: #555; line-height: 1.3; }
+
+        /* LÖSCHEN-BUTTON */
+        .delete-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255,0.8); border: none; border-radius: 50%;
+            width: 35px; height: 35px; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5;
         }
 
-        button { 
-            background: var(--accent); 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-weight: bold; 
-            font-size: 16px;
-        }
+        /* ZOOM LOGIK (Intelligentes Ein/Ausblenden) */
+        .date-full, .date-month, .date-year { display: none; }
+        
+        /* Zoom Detail (Ganz nah dran) */
+        .zoom-detail .date-full { display: block; font-size: 0.9rem; }
+        
+        /* Zoom Mittel */
+        .zoom-medium .date-month { display: block; font-size: 0.8rem; }
+        
+        /* Zoom Weit weg (Sehr viele Fotos) */
+        .zoom-far .date-year { display: block; font-size: 0.7rem; color: #888; }
+        .zoom-far .card-content { display: none; /* Text ausblenden für bessere Übersicht! */ }
+        .zoom-far .delete-btn { display: none; }
 
+        /* UPLOAD */
+        footer { background: white; padding: 15px 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        .upload-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input[type="file"] { display: none; }
+        .file-label { background: #f0f0f0; padding: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; width: 50px; flex-shrink: 0; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; }
+        button { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
         .hidden { display: none !important; }
         #status { font-size: 0.8rem; color: var(--accent); text-align: center; margin-top: 5px; margin-bottom: 0; }
     </style>
@@ -208,25 +132,20 @@
 
 <div id="login-screen">
     <h1 style="font-size: 4rem; margin: 0 0 10px 0;">📸</h1>
-    <h2 style="color: var(--text);">Timeline Login</h2>
+    <h2>Timeline Login</h2>
     <input type="password" id="pin-field" placeholder="PIN eingeben (1234)">
     <button onclick="checkAccess()">Öffnen</button>
 </div>
 
 <div id="main-app" class="hidden">
-    
     <header>
         <h2>Unsere Momente</h2>
-        <div class="zoom-controls">
-            <span>🔍</span>
-            <input type="range" id="zoom-slider" min="150" max="400" value="250">
-        </div>
+        <div class="zoom-hint">🤏 Zwei Finger zum Zoomen</div>
     </header>
 
-    <div id="timeline-container">
+    <div id="timeline-container" class="zoom-detail">
         <div class="timeline-line"></div>
-        <div id="timeline-list">
-            </div>
+        <div id="timeline-list"></div>
     </div>
 
     <footer>
@@ -238,12 +157,12 @@
         <button id="upload-btn">Posten</button>
         <p id="status"></p>
     </footer>
-
 </div>
 
 <script type="module">
+    // NEU: deleteDoc und doc wurden hinzugefügt!
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
@@ -257,7 +176,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // LOGIN
     window.checkAccess = function() {
         if(document.getElementById('pin-field').value === "1234") {
             document.getElementById('login-screen').classList.add('hidden');
@@ -266,11 +184,54 @@
         } else { alert("Falscher PIN!"); }
     };
 
-    // ZOOM FUNKTION
-    document.getElementById('zoom-slider').addEventListener('input', function(e) {
-        // Ändert die CSS Variable stufenlos
-        document.documentElement.style.setProperty('--card-size', e.target.value + 'px');
+    // LÖSCH-FUNKTION (Weltweit verfügbar für die Buttons)
+    window.deleteMoment = async function(id) {
+        if(confirm("Möchtest du dieses Foto wirklich löschen?")) {
+            try {
+                await deleteDoc(doc(db, "momente", id));
+            } catch(e) {
+                alert("Fehler beim Löschen!");
+            }
+        }
+    };
+
+    // PINCH-TO-ZOOM (Handy Fingerbewegung)
+    const container = document.getElementById('timeline-container');
+    let initialDistance = null;
+    let initialSize = 250;
+
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            initialSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--card-size'));
+        }
     });
+
+    container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialDistance) {
+            e.preventDefault(); // Verhindert Scrollen beim Zoomen
+            const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            const scale = currentDistance / initialDistance;
+            let newSize = initialSize * scale;
+
+            // Grenzen für den Zoom (Minimal 60px für riesige Übersicht, Maximal 400px für Detail)
+            if(newSize < 60) newSize = 60;
+            if(newSize > 400) newSize = 400;
+
+            document.documentElement.style.setProperty('--card-size', newSize + 'px');
+
+            // Klassen setzen für das intelligente Datum
+            if(newSize > 200) {
+                container.className = 'zoom-detail';
+            } else if(newSize > 100) {
+                container.className = 'zoom-medium';
+            } else {
+                container.className = 'zoom-far';
+            }
+        }
+    });
+
+    container.addEventListener('touchend', () => { initialDistance = null; });
 
     // BILD VERKLEINERN
     const resizeImage = (file) => {
@@ -282,18 +243,11 @@
                 img.src = event.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
+                    let width = img.width, height = img.height;
                     const max_size = 800; 
-
-                    if (width > height) {
-                        if (width > max_size) { height *= max_size / width; width = max_size; }
-                    } else {
-                        if (height > max_size) { width *= max_size / height; height = max_size; }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
+                    if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                    else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     resolve(canvas.toDataURL('image/jpeg', 0.6));
@@ -308,56 +262,55 @@
         const descField = document.getElementById('desc-field');
         const status = document.getElementById('status');
 
-        if(!fileBtn.files[0]) return alert("Bitte tippe auf 📷 um ein Foto auszuwählen!");
-        if(!descField.value) return alert("Bitte schreibe einen kurzen Text dazu!");
+        if(!fileBtn.files[0] || !descField.value) return alert("Foto und Text fehlen!");
 
-        status.innerText = "Moment wird gespeichert...";
+        status.innerText = "Speichert...";
         document.getElementById('upload-btn').disabled = true;
         
         try {
             const base64Image = await resizeImage(fileBtn.files[0]);
-            await addDoc(collection(db, "momente"), {
-                bildData: base64Image,
-                text: descField.value,
-                erstelltAm: Date.now()
-            });
-
-            status.innerText = "✅ Gepostet!";
-            descField.value = "";
-            fileBtn.value = "";
+            await addDoc(collection(db, "momente"), { bildData: base64Image, text: descField.value, erstelltAm: Date.now() });
+            status.innerText = "✅ Gepostet!"; descField.value = ""; fileBtn.value = "";
             setTimeout(() => { status.innerText = ""; }, 3000);
-
-        } catch (e) {
-            status.innerText = "❌ Fehler beim Speichern.";
-        }
+        } catch (e) { status.innerText = "❌ Fehler."; }
         document.getElementById('upload-btn').disabled = false;
     };
 
-    // TIMELINE LADEN & ANZEIGEN
+    // TIMELINE LADEN
     function startTimelineListener() {
-        const q = query(collection(db, "momente"), orderBy("erstelltAm", "asc")); // "asc" für links nach rechts
+        const q = query(collection(db, "momente"), orderBy("erstelltAm", "asc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('timeline-list');
             list.innerHTML = "";
             
             snapshot.forEach((doc) => {
                 const data = doc.data();
+                const id = doc.id; // Dokumenten-ID für das Löschen
                 
-                // Datum schön formatieren
                 const dateObj = new Date(data.erstelltAm);
-                const dateStr = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const dayFull = dateObj.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const monthYear = dateObj.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }); // z.B. Feb 2026
+                const yearOnly = dateObj.toLocaleDateString('de-DE', { year: 'numeric' });
 
+                // HINWEIS: loading="lazy" sorgt dafür, dass 200 Fotos das Handy nicht lahmlegen!
                 list.innerHTML += `
-                    <div class="card">
-                        <img src="${data.bildData}">
-                        <div class="card-content">
-                            <div class="card-text">${data.text}</div>
-                            <div class="card-date">${dateStr}</div>
+                    <div class="timeline-item">
+                        <div class="axis-marker">
+                            <div class="axis-dot"></div>
+                            <div class="date-label date-full">${dayFull}</div>
+                            <div class="date-label date-month">${monthYear}</div>
+                            <div class="date-label date-year">${yearOnly}</div>
+                        </div>
+                        <div class="card">
+                            <button class="delete-btn" onclick="deleteMoment('${id}')">🗑️</button>
+                            <img src="${data.bildData}" loading="lazy">
+                            <div class="card-content">
+                                <div class="card-text">${data.text}</div>
+                            </div>
                         </div>
                     </div>`;
             });
 
-            // Automatisch ans Ende (ganz nach rechts) scrollen bei neuen Bildern
             setTimeout(() => {
                 const container = document.getElementById('timeline-container');
                 container.scrollLeft = container.scrollWidth;

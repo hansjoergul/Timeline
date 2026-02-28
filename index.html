@@ -1,182 +1,786 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Unsere Familien-Timeline</title>
-    <style>
-        :root { --accent: #ff6b6b; --bg: #f4f7f6; --text: #333; --card-size: 280px; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .hidden { display: none !important; }
-        
-        header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
-        header h2 { margin: 0; color: var(--accent); font-size: 1.2rem; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Hansjoerg ✦ Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-        /* TIMELINE CONTAINER */
-        #timeline-container { flex-grow: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; padding: 0 50vw; position: relative; -webkit-overflow-scrolling: touch; }
-        .timeline-line { position: absolute; top: 45%; left: 0; width: 100000px; height: 2px; background: #ccd; z-index: 0; }
-        #timeline-list { display: flex; gap: 40px; z-index: 1; align-items: flex-start; }
+<style>
+  :root {
+    --card-size: 220px;
+    --accent: #d4956a;
+    --accent2: #e8c5a0;
+    --bg: #0f0c0a;
+    --bg2: #1a1511;
+    --line: #3a2e26;
+    --text: #f0e8dc;
+    --text-muted: #8a7060;
+    --card-bg: #1f1812;
+    --card-border: #3a2e26;
+    --shadow: rgba(0,0,0,0.6);
+    --gold: #c9a96e;
+  }
 
-        /* TIMELINE ELEMENT */
-        .timeline-item { display: flex; flex-direction: column; align-items: center; width: var(--card-size); }
-        .date-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
-        .card { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; overflow: hidden; transition: transform 0.2s; }
-        .card img { width: 100%; height: var(--card-size); object-fit: cover; display: block; background: #eee; }
-        .card-content { padding: 15px; background: white; min-height: 50px; }
-        .card-text { font-size: 0.95rem; line-height: 1.4; color: #444; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* UPLOAD BEREICH */
-        footer { background: white; padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 10; }
-        .upload-controls { display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
-        .row { display: flex; gap: 10px; }
-        input[type="file"] { flex: 1; font-size: 0.8rem; }
-        input[type="date"], input[type="text"] { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
-        input[type="text"] { flex-grow: 1; }
-        button { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        #status { text-align: center; margin-top: 10px; font-size: 0.8rem; color: #666; height: 1em; }
-    </style>
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ─── PIN SCREEN ─── */
+  #pin-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 32px;
+  }
+  #pin-screen .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-align: center;
+    line-height: 1.2;
+  }
+  #pin-screen .logo span { display: block; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; color: var(--text-muted); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 6px; }
+  .pin-dots { display: flex; gap: 16px; }
+  .pin-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--accent2);
+    background: transparent;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); transform: scale(1.2); }
+  .pin-grid {
+    display: grid; grid-template-columns: repeat(3, 72px);
+    gap: 12px;
+  }
+  .pin-btn {
+    height: 72px; border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: var(--bg2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.5rem; font-weight: 300;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-btn:active { background: var(--accent); border-color: var(--accent); transform: scale(0.92); }
+  .pin-btn.del { font-size: 1.1rem; color: var(--text-muted); }
+  .pin-error {
+    color: #e07070; font-size: 0.85rem;
+    opacity: 0; transition: opacity 0.3s;
+    height: 20px;
+  }
+  .pin-error.show { opacity: 1; }
+
+  /* ─── APP SHELL ─── */
+  #app { height: 100%; display: flex; flex-direction: column; }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .app-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; color: var(--gold);
+    letter-spacing: 0.03em;
+  }
+  .app-title small {
+    display: block; font-size: 0.65rem; font-family: 'DM Sans', sans-serif;
+    color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase;
+    font-style: normal;
+  }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid var(--line); background: var(--bg2);
+    color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; transition: all 0.2s;
+  }
+  .icon-btn:active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #photo-count {
+    font-size: 0.75rem; color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── TIMELINE WRAPPER ─── */
+  #timeline-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    touch-action: none; /* we handle all touch ourselves */
+  }
+
+  /* ─── TIMELINE CONTAINER ─── */
+  #timeline {
+    height: 100%;
+    overflow-x: auto; overflow-y: hidden;
+    display: flex; align-items: center;
+    padding: 20px 60px;
+    gap: 0;
+    position: relative;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #timeline::-webkit-scrollbar { display: none; }
+
+  /* ─── TIMELINE AXIS ─── */
+  .timeline-axis {
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--line) 5%, var(--line) 95%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    flex-shrink: 0;
+    width: var(--card-size);
+    display: flex; flex-direction: column; align-items: center;
+    position: relative;
+    padding: 0 16px;
+    transition: width 0.05s linear; /* fast follow during pinch */
+  }
+
+  /* alternating above/below axis */
+  .card:nth-child(odd) { flex-direction: column; }
+  .card:nth-child(even) { flex-direction: column-reverse; }
+
+  .card-date {
+    font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gold); font-family: 'DM Sans', sans-serif; font-weight: 500;
+    white-space: nowrap;
+    padding: 6px 0;
+  }
+
+  .card-connector {
+    width: 1px;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .card:nth-child(odd) .card-connector { height: 24px; }
+  .card:nth-child(even) .card-connector { height: 24px; }
+
+  .card-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent2);
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  .card-media {
+    width: 100%;
+    aspect-ratio: 3/4;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 1.5px solid var(--card-border);
+    box-shadow: 0 8px 32px var(--shadow);
+    flex-shrink: 0;
+    background: var(--card-bg);
+  }
+  .card-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.4s;
+  }
+  .card-media img.loading { opacity: 0; }
+
+  .card-caption {
+    font-size: 0.72rem; color: var(--text-muted);
+    text-align: center; line-height: 1.4;
+    padding: 6px 4px;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+
+  /* ─── EMPTY STATE ─── */
+  #empty-state {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; pointer-events: none;
+  }
+  .empty-icon { font-size: 3rem; opacity: 0.2; }
+  .empty-text { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--text-muted); font-style: italic; }
+
+  /* ─── ZOOM INDICATOR ─── */
+  #zoom-hint {
+    position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
+    background: rgba(15,12,10,0.85); backdrop-filter: blur(8px);
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 8px 18px; font-size: 0.75rem; color: var(--text-muted);
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.3s; z-index: 50;
+    white-space: nowrap;
+  }
+  #zoom-hint.show { opacity: 1; }
+
+  /* ─── UPLOAD PANEL ─── */
+  #upload-toggle {
+    position: fixed; bottom: 24px; right: 20px; z-index: 100;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--accent); border: none;
+    color: white; font-size: 1.5rem;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(212,149,106,0.5);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s, background 0.2s;
+  }
+  #upload-toggle.open { background: var(--text-muted); transform: rotate(45deg); }
+
+  #upload-panel {
+    position: fixed; bottom: 90px; left: 12px; right: 12px;
+    background: var(--bg2); border: 1.5px solid var(--line);
+    border-radius: 20px; padding: 24px 20px 20px;
+    z-index: 99; box-shadow: 0 -8px 40px rgba(0,0,0,0.7);
+    transform: translateY(calc(100% + 100px));
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #upload-panel.open { transform: translateY(0); }
+
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; color: var(--gold);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block; font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="date"] {
+    width: 100%; padding: 10px 14px;
+    background: var(--bg); border: 1.5px solid var(--line);
+    border-radius: 10px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+
+  .file-pick {
+    width: 100%; padding: 12px;
+    border: 1.5px dashed var(--line); border-radius: 10px;
+    background: var(--bg); cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-muted); font-size: 0.85rem;
+    transition: border-color 0.2s;
+  }
+  .file-pick:active { border-color: var(--accent); }
+  .file-pick input { display: none; }
+  .file-pick-icon { font-size: 1.4rem; }
+  #file-label { flex: 1; }
+
+  .preview-thumb {
+    width: 60px; height: 60px; border-radius: 8px;
+    object-fit: cover; display: none;
+    border: 1.5px solid var(--accent);
+  }
+
+  .save-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent); border: none; border-radius: 12px;
+    color: white; font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; font-weight: 500;
+    cursor: pointer; margin-top: 8px;
+    transition: opacity 0.2s, transform 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .save-btn:disabled { opacity: 0.4; pointer-events: none; }
+  .save-btn:active { transform: scale(0.97); }
+
+  .progress-bar {
+    width: 0%; height: 3px; background: var(--accent);
+    border-radius: 2px; margin-top: 10px;
+    transition: width 0.3s;
+  }
+
+  .status-msg {
+    text-align: center; font-size: 0.8rem;
+    color: var(--text-muted); margin-top: 8px;
+    min-height: 20px;
+  }
+
+  /* ─── LOADING SKELETON ─── */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--card-bg) 25%, var(--line) 50%, var(--card-bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+
+  /* ─── LIGHTBOX ─── */
+  #lightbox {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.92); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  #lightbox.open { opacity: 1; pointer-events: all; }
+  #lightbox img {
+    max-width: 92vw; max-height: 80vh;
+    border-radius: 16px; object-fit: contain;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+  }
+  #lightbox-caption {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    font-family: 'Playfair Display', serif; font-style: italic;
+    color: var(--text-muted); font-size: 0.9rem;
+    text-align: center; max-width: 80vw;
+  }
+  #lightbox-date {
+    position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+    font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  /* ─── FADE IN ANIMATION ─── */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .card { animation: fadeSlideIn 0.5s ease forwards; }
+
+  /* grain overlay */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px; opacity: 0.4;
+  }
+
+  /* swipe hint first visit */
+  @keyframes swipeHint {
+    0%, 100% { transform: translateX(0); opacity: 0.4; }
+    50% { transform: translateX(-20px); opacity: 0.9; }
+  }
+  #swipe-hint {
+    position: absolute; top: 50%; right: 20px;
+    transform: translateY(-50%);
+    color: var(--text-muted); font-size: 1.4rem;
+    animation: swipeHint 2s ease-in-out 2s 3 forwards;
+    pointer-events: none; z-index: 5;
+  }
+</style>
 </head>
 <body>
 
-<div id="login-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
-    <h1 style="font-size: 4rem; margin: 0;">👶</h1>
-    <h2>Familien Login</h2>
-    <input type="password" id="pin-field" placeholder="PIN eingeben" style="padding: 15px; border-radius: 10px; border: 1px solid #ddd; text-align: center; font-size: 1.2rem; width: 200px; margin-bottom: 20px;">
-    <button onclick="checkAccess()" style="width: 230px;">Timeline öffnen</button>
+<!-- ─── PIN SCREEN ─── -->
+<div id="pin-screen">
+  <div class="logo">
+    Hansjoerg
+    <span>✦ Erinnerungen ✦</span>
+  </div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-grid">
+    <button class="pin-btn" onclick="pinPress(1)">1</button>
+    <button class="pin-btn" onclick="pinPress(2)">2</button>
+    <button class="pin-btn" onclick="pinPress(3)">3</button>
+    <button class="pin-btn" onclick="pinPress(4)">4</button>
+    <button class="pin-btn" onclick="pinPress(5)">5</button>
+    <button class="pin-btn" onclick="pinPress(6)">6</button>
+    <button class="pin-btn" onclick="pinPress(7)">7</button>
+    <button class="pin-btn" onclick="pinPress(8)">8</button>
+    <button class="pin-btn" onclick="pinPress(9)">9</button>
+    <button class="pin-btn del" onclick="pinDel()">⌫</button>
+    <button class="pin-btn" onclick="pinPress(0)">0</button>
+    <button class="pin-btn del" onclick="pinClear()">✕</button>
+  </div>
+  <div class="pin-error" id="pin-error">Falscher PIN. Bitte nochmal.</div>
 </div>
 
-<div id="main-app" class="hidden">
-    <header>
-        <h2>✨ Unsere Momente</h2>
-    </header>
+<!-- ─── MAIN APP ─── -->
+<div id="app" style="display:none;">
 
-    <div id="timeline-container">
-        <div class="timeline-line"></div>
-        <div id="timeline-list"></div>
+  <header>
+    <div class="app-title">
+      Hansjoerg
+      <small>Erinnerungen</small>
     </div>
+    <div class="header-right">
+      <span id="photo-count">0 Fotos</span>
+      <button class="icon-btn" onclick="scrollToEnd()" title="Neuestes">→</button>
+    </div>
+  </header>
 
-    <footer>
-        <div class="upload-controls">
-            <div class="row">
-                <input type="file" id="file-btn" accept="image/*">
-                <input type="date" id="date-field">
-            </div>
-            <input type="text" id="desc-field" placeholder="Was ist heute passiert?">
-            <button id="upload-btn">Moment speichern</button>
-            <p id="status"></p>
-        </div>
-    </footer>
+  <div id="timeline-wrapper">
+    <div class="timeline-axis"></div>
+    <div id="timeline">
+      <span id="swipe-hint">←</span>
+    </div>
+    <div id="empty-state">
+      <div class="empty-icon">🌸</div>
+      <div class="empty-text">Noch keine Erinnerungen</div>
+    </div>
+  </div>
+
+  <div id="zoom-hint">🤏 Zwei Finger zum Zoomen</div>
 </div>
 
+<!-- ─── UPLOAD FAB + PANEL ─── -->
+<button id="upload-toggle" onclick="togglePanel()">+</button>
+
+<div id="upload-panel">
+  <div class="panel-title">✦ Moment hinzufügen</div>
+
+  <div class="form-group">
+    <label>Foto wählen</label>
+    <label class="file-pick" for="file-input">
+      <input type="file" id="file-input" accept="image/*" capture="environment" onchange="onFileChange(event)">
+      <span class="file-pick-icon">📷</span>
+      <span id="file-label">Galerie oder Kamera öffnen</span>
+      <img id="preview-thumb" class="preview-thumb" alt="">
+    </label>
+  </div>
+
+  <div class="form-group">
+    <label>Datum des Moments</label>
+    <input type="date" id="date-input">
+  </div>
+
+  <div class="form-group">
+    <label>Beschreibung</label>
+    <input type="text" id="text-input" placeholder="Was war das für ein Moment?">
+  </div>
+
+  <button class="save-btn" id="save-btn" onclick="uploadMoment()">
+    <span id="save-label">Speichern</span>
+  </button>
+  <div class="progress-bar" id="progress-bar"></div>
+  <div class="status-msg" id="status-msg"></div>
+</div>
+
+<!-- ─── LIGHTBOX ─── -->
+<div id="lightbox" onclick="closeLightbox()">
+  <div id="lightbox-date"></div>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-caption"></div>
+</div>
+
+<!-- ─── FIREBASE SDK ─── -->
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, Timestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // Deine Konfiguration
-    const firebaseConfig = {
-        apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
-        authDomain: "hansjoergultimeline.firebaseapp.com",
-        projectId: "hansjoergultimeline",
-        storageBucket: "hansjoergultimeline.firebasestorage.app",
-        messagingSenderId: "616046735856",
-        appId: "1:616046735856:web:c8e68d41725d6a41212d35"
-    };
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
+  authDomain: "hansjoergultimeline.firebaseapp.com",
+  projectId: "hansjoergultimeline",
+  storageBucket: "hansjoergultimeline.firebasestorage.app",
+  messagingSenderId: "616046735856",
+  appId: "1:616046735856:web:c8e68d41725d6a41212d35"
+};
+const CLOUDINARY_CLOUD = "db98q2eok";
+const CLOUDINARY_PRESET = "timeline";
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+const CORRECT_PIN = "1234";
 
-    const CLOUD_NAME = "db98q2eok"; 
-    const UPLOAD_PRESET = "timeline"; 
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const timeline = document.getElementById("timeline");
+const emptyState = document.getElementById("empty-state");
+const photoCountEl = document.getElementById("photo-count");
+const progressBar = document.getElementById("progress-bar");
+const statusMsg = document.getElementById("status-msg");
+const saveBtn = document.getElementById("save-btn");
+const saveLabel = document.getElementById("save-label");
+const zoomHint = document.getElementById("zoom-hint");
 
-    // LOGIN PRÜFUNG
-    window.checkAccess = function() {
-        if(document.getElementById('pin-field').value === "1234") {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('date-field').valueAsDate = new Date();
-            loadTimeline();
-        } else {
-            alert("Falscher PIN!");
-        }
-    };
+let selectedFile = null;
+let cardSizePx = 220;
+const MIN_SIZE = 110;
+const MAX_SIZE = 400;
+let zoomHintShown = false;
 
-    // UPLOAD LOGIK
-    document.getElementById('upload-btn').onclick = async () => {
-        const file = document.getElementById('file-btn').files[0];
-        const desc = document.getElementById('desc-field').value;
-        const date = document.getElementById('date-field').value;
-        const status = document.getElementById('status');
+// ══════════════════════════════════════════════
+//  PIN
+// ══════════════════════════════════════════════
+let pinBuffer = "";
 
-        if(!file || !desc || !date) return alert("Bitte Bild, Text und Datum eingeben!");
+window.pinPress = (n) => {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += n;
+  updateDots();
+  if (pinBuffer.length === 4) checkPin();
+};
+window.pinDel = () => { pinBuffer = pinBuffer.slice(0,-1); updateDots(); };
+window.pinClear = () => { pinBuffer = ""; updateDots(); };
 
-        status.innerText = "⏳ Foto wird übertragen...";
-        document.getElementById('upload-btn').disabled = true;
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`d${i}`).classList.toggle("filled", i < pinBuffer.length);
+  }
+}
 
-        try {
-            // 1. Upload zu Cloudinary
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", UPLOAD_PRESET);
+function checkPin() {
+  if (pinBuffer === CORRECT_PIN) {
+    document.getElementById("pin-screen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+    document.getElementById("upload-toggle").style.display = "flex";
+    startTimeline();
+  } else {
+    const err = document.getElementById("pin-error");
+    err.classList.add("show");
+    setTimeout(() => { err.classList.remove("show"); pinBuffer = ""; updateDots(); }, 1600);
+  }
+}
 
-            const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                method: "POST",
-                body: formData
-            });
-            const cloudData = await cloudRes.json();
-            
-            if(!cloudData.secure_url) throw new Error("Cloudinary Upload fehlgeschlagen");
+// ══════════════════════════════════════════════
+//  REALTIME TIMELINE
+// ══════════════════════════════════════════════
+function startTimeline() {
+  // Set today as default date
+  document.getElementById("date-input").valueAsDate = new Date();
 
-            // 2. Link in Firebase speichern
-            await addDoc(collection(db, "momente"), {
-                imageUrl: cloudData.secure_url,
-                text: desc,
-                eventDate: new Date(date).getTime(),
-                createdAt: Date.now()
-            });
+  const q = query(collection(db, "momente"), orderBy("eventDate", "asc"));
+  onSnapshot(q, (snapshot) => {
+    const momente = [];
+    snapshot.forEach(doc => momente.push({ id: doc.id, ...doc.data() }));
 
-            status.innerText = "✅ Erfolgreich gespeichert!";
-            document.getElementById('desc-field').value = "";
-            document.getElementById('file-btn').value = "";
-        } catch (e) {
-            console.error(e);
-            status.innerText = "❌ Fehler beim Speichern!";
-        } finally {
-            document.getElementById('upload-btn').disabled = false;
-            setTimeout(() => { status.innerText = ""; }, 3000);
-        }
-    };
+    photoCountEl.textContent = `${momente.length} Foto${momente.length !== 1 ? "s" : ""}`;
+    emptyState.style.display = momente.length === 0 ? "flex" : "none";
 
-    // TIMELINE DATEN LADEN
-    function loadTimeline() {
-        const q = query(collection(db, "momente"), orderBy("eventDate", "asc"));
-        onSnapshot(q, (snapshot) => {
-            const list = document.getElementById('timeline-list');
-            list.innerHTML = "";
-            
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const d = new Date(data.eventDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                
-                list.innerHTML += `
-                    <div class="timeline-item">
-                        <div class="date-badge">${d}</div>
-                        <div class="card">
-                            <img src="${data.imageUrl}" loading="lazy" alt="Moment">
-                            <div class="card-content">
-                                <div class="card-text">${data.text}</div>
-                            </div>
-                        </div>
-                    </div>`;
-            });
+    // Re-render
+    // Keep only the swipe hint, rebuild cards
+    const hint = document.getElementById("swipe-hint");
+    timeline.innerHTML = "";
+    if (hint) timeline.appendChild(hint);
+    if (momente.length > 0 && hint) hint.style.display = "none";
 
-            // Automatisch zum Ende (neuestes Bild) scrollen
-            setTimeout(() => {
-                const container = document.getElementById('timeline-container');
-                container.scrollLeft = container.scrollWidth;
-            }, 500);
-        });
+    momente.forEach((m, idx) => {
+      const card = createCard(m, idx);
+      timeline.appendChild(card);
+    });
+  });
+}
+
+function createCard(m, idx) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.animationDelay = `${Math.min(idx * 0.04, 1)}s`;
+
+  // Format date
+  let dateStr = "—";
+  if (m.eventDate) {
+    const d = m.eventDate.toDate ? m.eventDate.toDate() : new Date(m.eventDate);
+    dateStr = d.toLocaleDateString("de-DE", { day:"2-digit", month:"short", year:"2-digit" });
+  }
+
+  card.innerHTML = `
+    <div class="card-date">${dateStr}</div>
+    <div class="card-connector"></div>
+    <div class="card-dot"></div>
+    <div class="card-media" onclick="openLightbox('${m.imageUrl}','${escHtml(m.text||'')}','${dateStr}')">
+      <img src="${m.imageUrl}"
+           loading="lazy"
+           alt="${escHtml(m.text||'')}"
+           onload="this.classList.remove('loading')"
+           class="loading skeleton">
+    </div>
+    ${m.text ? `<div class="card-caption">${escHtml(m.text)}</div>` : ""}
+  `;
+  return card;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// ══════════════════════════════════════════════
+//  UPLOAD
+// ══════════════════════════════════════════════
+window.onFileChange = (e) => {
+  selectedFile = e.target.files[0];
+  if (!selectedFile) return;
+  const thumb = document.getElementById("preview-thumb");
+  const label = document.getElementById("file-label");
+  thumb.src = URL.createObjectURL(selectedFile);
+  thumb.style.display = "block";
+  label.textContent = selectedFile.name.length > 20 ? selectedFile.name.slice(0,18)+"…" : selectedFile.name;
+};
+
+window.uploadMoment = async () => {
+  if (!selectedFile) { setStatus("Bitte ein Foto wählen."); return; }
+  const dateVal = document.getElementById("date-input").value;
+  if (!dateVal) { setStatus("Datum fehlt."); return; }
+  const text = document.getElementById("text-input").value.trim();
+
+  saveBtn.disabled = true;
+  saveLabel.textContent = "Wird hochgeladen…";
+  setStatus("Foto wird zu Cloudinary hochgeladen…");
+  setProgress(20);
+
+  try {
+    // 1. Upload to Cloudinary
+    const form = new FormData();
+    form.append("file", selectedFile);
+    form.append("upload_preset", CLOUDINARY_PRESET);
+    const res = await fetch(CLOUDINARY_URL, { method: "POST", body: form });
+    if (!res.ok) throw new Error("Cloudinary Fehler: " + res.status);
+    const json = await res.json();
+    const imageUrl = json.secure_url;
+    setProgress(70);
+    setStatus("Wird in Datenbank gespeichert…");
+
+    // 2. Save to Firestore
+    const [y,mo,d] = dateVal.split("-").map(Number);
+    const eventDate = Timestamp.fromDate(new Date(y, mo-1, d));
+    await addDoc(collection(db, "momente"), {
+      imageUrl,
+      text,
+      eventDate,
+      createdAt: serverTimestamp()
+    });
+
+    setProgress(100);
+    setStatus("✓ Gespeichert!");
+    saveLabel.textContent = "Speichern";
+    saveBtn.disabled = false;
+    // reset
+    selectedFile = null;
+    document.getElementById("file-input").value = "";
+    document.getElementById("text-input").value = "";
+    document.getElementById("preview-thumb").style.display = "none";
+    document.getElementById("file-label").textContent = "Galerie oder Kamera öffnen";
+    document.getElementById("date-input").valueAsDate = new Date();
+    setTimeout(() => { setProgress(0); setStatus(""); togglePanel(); }, 1500);
+
+    // scroll to end
+    setTimeout(scrollToEnd, 600);
+
+  } catch(err) {
+    console.error(err);
+    setStatus("❌ Fehler: " + err.message);
+    saveLabel.textContent = "Erneut versuchen";
+    saveBtn.disabled = false;
+    setProgress(0);
+  }
+};
+
+function setProgress(pct) { progressBar.style.width = pct + "%"; }
+function setStatus(msg) { statusMsg.textContent = msg; }
+
+// ══════════════════════════════════════════════
+//  PINCH-TO-ZOOM
+// ══════════════════════════════════════════════
+const wrapper = document.getElementById("timeline-wrapper");
+let startDist = 0;
+let startSize = 220;
+let isPinching = false;
+
+wrapper.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    isPinching = true;
+    startDist = getDistance(e.touches[0], e.touches[1]);
+    startSize = cardSizePx;
+    if (!zoomHintShown) {
+      zoomHint.classList.add("show");
+      zoomHintShown = true;
+      setTimeout(() => zoomHint.classList.remove("show"), 2000);
     }
+  }
+}, { passive: false });
+
+wrapper.addEventListener("touchmove", (e) => {
+  if (isPinching && e.touches.length === 2) {
+    e.preventDefault();
+    const dist = getDistance(e.touches[0], e.touches[1]);
+    const scale = dist / startDist;
+    const newSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, startSize * scale));
+    cardSizePx = newSize;
+    document.documentElement.style.setProperty("--card-size", newSize + "px");
+  }
+}, { passive: false });
+
+wrapper.addEventListener("touchend", (e) => {
+  if (e.touches.length < 2) isPinching = false;
+});
+
+function getDistance(t1, t2) {
+  const dx = t1.clientX - t2.clientX;
+  const dy = t1.clientY - t2.clientY;
+  return Math.hypot(dx, dy);
+}
+
+// ══════════════════════════════════════════════
+//  LIGHTBOX
+// ══════════════════════════════════════════════
+window.openLightbox = (url, caption, date) => {
+  document.getElementById("lightbox-img").src = url;
+  document.getElementById("lightbox-caption").textContent = caption;
+  document.getElementById("lightbox-date").textContent = date;
+  document.getElementById("lightbox").classList.add("open");
+};
+window.closeLightbox = () => {
+  document.getElementById("lightbox").classList.remove("open");
+};
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+window.togglePanel = () => {
+  const panel = document.getElementById("upload-panel");
+  const btn = document.getElementById("upload-toggle");
+  panel.classList.toggle("open");
+  btn.classList.toggle("open");
+};
+
+window.scrollToEnd = () => {
+  const tl = document.getElementById("timeline");
+  tl.scrollTo({ left: tl.scrollWidth, behavior: "smooth" });
+};
+
+// prevent browser zoom on double-tap
+document.addEventListener("dblclick", e => e.preventDefault(), { passive: false });
+// prevent page zoom on pinch at body level
+document.addEventListener("touchmove", (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
 </script>
 
 </body>

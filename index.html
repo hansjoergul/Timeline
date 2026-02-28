@@ -3,53 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baby Timeline Pro</title>
+    <title>Unsere Familien-Timeline</title>
     <style>
-        /* Behalte dein CSS bei, füge dies für das neue Datumsfeld hinzu: */
-        :root { --accent: #ff6b6b; --bg: #f4f7f6; --card-size: 250px; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --accent: #ff6b6b; --bg: #f4f7f6; --text: #333; --card-size: 280px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .hidden { display: none !important; }
-        #timeline-container { flex-grow: 1; overflow-x: auto; display: flex; align-items: center; padding: 0 50vw; position: relative; }
-        .timeline-line { position: absolute; top: 50%; left: 0; width: 10000px; height: 2px; background: #ccc; z-index: 0; }
-        #timeline-list { display: flex; gap: 30px; z-index: 1; }
-        .card { background: white; border-radius: 12px; width: var(--card-size); box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .card img { width: 100%; height: var(--card-size); object-fit: cover; }
-        footer { background: white; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .input-row { display: flex; gap: 5px; }
-        input, button { padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        button { background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
+        
+        header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        header h2 { margin: 0; color: var(--accent); font-size: 1.2rem; }
+
+        /* TIMELINE CONTAINER */
+        #timeline-container { flex-grow: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; padding: 0 50vw; position: relative; -webkit-overflow-scrolling: touch; }
+        .timeline-line { position: absolute; top: 45%; left: 0; width: 100000px; height: 2px; background: #ccd; z-index: 0; }
+        #timeline-list { display: flex; gap: 40px; z-index: 1; align-items: flex-start; }
+
+        /* TIMELINE ELEMENT */
+        .timeline-item { display: flex; flex-direction: column; align-items: center; width: var(--card-size); }
+        .date-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .card { background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; overflow: hidden; transition: transform 0.2s; }
+        .card img { width: 100%; height: var(--card-size); object-fit: cover; display: block; background: #eee; }
+        .card-content { padding: 15px; background: white; min-height: 50px; }
+        .card-text { font-size: 0.95rem; line-height: 1.4; color: #444; }
+
+        /* UPLOAD BEREICH */
+        footer { background: white; padding: 20px; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 10; }
+        .upload-controls { display: flex; flex-direction: column; gap: 10px; max-width: 500px; margin: 0 auto; }
+        .row { display: flex; gap: 10px; }
+        input[type="file"] { flex: 1; font-size: 0.8rem; }
+        input[type="date"], input[type="text"] { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        input[type="text"] { flex-grow: 1; }
+        button { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #status { text-align: center; margin-top: 10px; font-size: 0.8rem; color: #666; height: 1em; }
     </style>
 </head>
 <body>
 
-<div id="login-screen" style="text-align:center; padding-top:100px;">
-    <h1>👶 Timeline</h1>
-    <input type="password" id="pin-field" placeholder="PIN (1234)">
-    <button onclick="checkAccess()">Öffnen</button>
+<div id="login-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+    <h1 style="font-size: 4rem; margin: 0;">👶</h1>
+    <h2>Familien Login</h2>
+    <input type="password" id="pin-field" placeholder="PIN eingeben" style="padding: 15px; border-radius: 10px; border: 1px solid #ddd; text-align: center; font-size: 1.2rem; width: 200px; margin-bottom: 20px;">
+    <button onclick="checkAccess()" style="width: 230px;">Timeline öffnen</button>
 </div>
 
 <div id="main-app" class="hidden">
+    <header>
+        <h2>✨ Unsere Momente</h2>
+    </header>
+
     <div id="timeline-container">
         <div class="timeline-line"></div>
         <div id="timeline-list"></div>
     </div>
 
     <footer>
-        <div class="input-row">
-            <input type="file" id="file-btn" accept="image/*">
-            <input type="date" id="date-field">
+        <div class="upload-controls">
+            <div class="row">
+                <input type="file" id="file-btn" accept="image/*">
+                <input type="date" id="date-field">
+            </div>
+            <input type="text" id="desc-field" placeholder="Was ist heute passiert?">
+            <button id="upload-btn">Moment speichern</button>
+            <p id="status"></p>
         </div>
-        <input type="text" id="desc-field" placeholder="Was ist passiert?">
-        <button id="upload-btn">Moment speichern</button>
-        <p id="status" style="font-size:12px; text-align:center;"></p>
     </footer>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // Deine Konfiguration
     const firebaseConfig = {
         apiKey: "AIzaSyAc3oaP6Dp0DUaum3e7YNLtO6lSzuXXtro",
         authDomain: "hansjoergultimeline.firebaseapp.com",
@@ -59,92 +83,101 @@
         appId: "1:616046735856:web:c8e68d41725d6a41212d35"
     };
 
+    const CLOUD_NAME = "db98q2eok"; 
+    const UPLOAD_PRESET = "timeline"; 
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
-    // Login Logik
+    // LOGIN PRÜFUNG
     window.checkAccess = function() {
         if(document.getElementById('pin-field').value === "1234") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
-            // Setze Standarddatum auf heute
             document.getElementById('date-field').valueAsDate = new Date();
-            startTimelineListener();
-        } else { alert("Falscher PIN!"); }
+            loadTimeline();
+        } else {
+            alert("Falscher PIN!");
+        }
     };
 
-    // Bild-Kompression (Wichtig für 0€ Limit!)
-    const resizeImage = (file) => {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const max_size = 1000; 
-                    let w = img.width, h = img.height;
-                    if (w > h) { if (w > max_size) { h *= max_size / w; w = max_size; } }
-                    else { if (h > max_size) { w *= max_size / h; h = max_size; } }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% Qualität spart massiv Platz
-                };
-            };
-        });
-    };
-
-    // Upload Logik
+    // UPLOAD LOGIK
     document.getElementById('upload-btn').onclick = async () => {
         const file = document.getElementById('file-btn').files[0];
         const desc = document.getElementById('desc-field').value;
         const date = document.getElementById('date-field').value;
         const status = document.getElementById('status');
 
-        if(!file || !desc || !date) return alert("Alles ausfüllen!");
+        if(!file || !desc || !date) return alert("Bitte Bild, Text und Datum eingeben!");
 
-        status.innerText = "Wird verarbeitet...";
-        const compressedBase64 = await resizeImage(file);
-        
+        status.innerText = "⏳ Foto wird übertragen...";
+        document.getElementById('upload-btn').disabled = true;
+
         try {
-            const storagePath = `momente/${Date.now()}.jpg`;
-            const storageRef = ref(storage, storagePath);
-            const snapshot = await uploadString(storageRef, compressedBase64, 'data_url');
-            const url = await getDownloadURL(snapshot.ref);
+            // 1. Upload zu Cloudinary
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
 
+            const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData
+            });
+            const cloudData = await cloudRes.json();
+            
+            if(!cloudData.secure_url) throw new Error("Cloudinary Upload fehlgeschlagen");
+
+            // 2. Link in Firebase speichern
             await addDoc(collection(db, "momente"), {
-                imageUrl: url,
+                imageUrl: cloudData.secure_url,
                 text: desc,
                 eventDate: new Date(date).getTime(),
                 createdAt: Date.now()
             });
-            status.innerText = "✅ Gespeichert!";
+
+            status.innerText = "✅ Erfolgreich gespeichert!";
             document.getElementById('desc-field').value = "";
-        } catch (e) { status.innerText = "❌ Fehler!"; }
+            document.getElementById('file-btn').value = "";
+        } catch (e) {
+            console.error(e);
+            status.innerText = "❌ Fehler beim Speichern!";
+        } finally {
+            document.getElementById('upload-btn').disabled = false;
+            setTimeout(() => { status.innerText = ""; }, 3000);
+        }
     };
 
-    // Timeline laden
-    function startTimelineListener() {
+    // TIMELINE DATEN LADEN
+    function loadTimeline() {
         const q = query(collection(db, "momente"), orderBy("eventDate", "asc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('timeline-list');
             list.innerHTML = "";
-            snapshot.forEach((snap) => {
-                const data = snap.data();
-                const d = new Date(data.eventDate).toLocaleDateString('de-DE');
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const d = new Date(data.eventDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
                 list.innerHTML += `
-                    <div class="card">
-                        <img src="${data.imageUrl}" loading="lazy">
-                        <div style="padding:10px;">
-                            <small>${d}</small><br>
-                            ${data.text}
+                    <div class="timeline-item">
+                        <div class="date-badge">${d}</div>
+                        <div class="card">
+                            <img src="${data.imageUrl}" loading="lazy" alt="Moment">
+                            <div class="card-content">
+                                <div class="card-text">${data.text}</div>
+                            </div>
                         </div>
                     </div>`;
             });
+
+            // Automatisch zum Ende (neuestes Bild) scrollen
+            setTimeout(() => {
+                const container = document.getElementById('timeline-container');
+                container.scrollLeft = container.scrollWidth;
+            }, 500);
         });
     }
 </script>
+
 </body>
 </html>

@@ -390,6 +390,14 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
   </div>
 </div>
 
+<!-- PIN wrapper — plain script so onclick attrs always resolve,
+     even if the module is still loading or has an error -->
+<script>
+function pp(n){window._pp?window._pp(n):void 0;}
+function pd(){window._pd&&window._pd();}
+function pc(){window._pc&&window._pc();}
+</script>
+
 <script type="module">
 import {initializeApp}     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {getFirestore,collection,addDoc,deleteDoc,updateDoc,doc,
@@ -423,9 +431,9 @@ onAuthStateChanged(auth,u=>{authReady=!!u;});
    PIN — SHA-256 hash + brute force lock
 ══════════════════════════════════════ */
 let pinBuf="",fails=0,lockUntil=0,lockIv=null;
-window.pp=n=>{if(Date.now()<lockUntil)return;if(pinBuf.length<4){pinBuf+=n;dots();if(pinBuf.length===4)checkPin();}};
-window.pd=()=>{if(Date.now()<lockUntil)return;pinBuf=pinBuf.slice(0,-1);dots();};
-window.pc=()=>{if(Date.now()<lockUntil)return;pinBuf="";dots();};
+window._pp=n=>{if(Date.now()<lockUntil)return;if(pinBuf.length<4){pinBuf+=n;dots();if(pinBuf.length===4)checkPin();}};
+window._pd=()=>{if(Date.now()<lockUntil)return;pinBuf=pinBuf.slice(0,-1);dots();};
+window._pc=()=>{if(Date.now()<lockUntil)return;pinBuf="";dots();};
 function dots(){for(let i=0;i<4;i++)$("d"+i).classList.toggle("filled",i<pinBuf.length);}
 async function h256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}
 async function checkPin(){
